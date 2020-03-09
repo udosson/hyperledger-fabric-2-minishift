@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: blockchain-orderer5
+  labels:
+    run: blockchain-orderer5
+spec:
+  type: ClusterIP
+  selector:
+    name: blockchain-orderer5
+  ports:
+  - protocol: TCP
+    port: 31010
+    name: grpc

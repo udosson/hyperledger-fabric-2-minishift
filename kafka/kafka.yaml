@@ -1,0 +1,39 @@
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name: kafka
+spec:
+  serviceName: "kafka"
+  # used 3 replicas in order to have alwayas majority for leader election
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        name: kafka
+    spec:
+      containers:
+        - name: kafka
+          image: hyperledger/fabric-kafka
+          securityContext:
+            runAsUser: 0
+          ports:
+            - name: kafka
+              containerPort: 9092
+              protocol: TCP
+          restart: always
+          volumeMounts:
+            - name: kafka-storage
+              mountPath: /tmp/kafka/
+          depends_on: zookeeper-0
+          env:
+           - name: KAFKA_ZOOKEEPER_CONNECT
+             value: zookeeper-0:2181
+  volumeClaimTemplates:
+    - metadata:
+        name: kafka-storage
+      spec:
+        resources:
+          requests:
+            storage: 1Gi
+        accessModes:
+          - ReadWriteOnce

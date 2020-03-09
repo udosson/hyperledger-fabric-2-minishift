@@ -1,0 +1,28 @@
+name: Generate orderer genesis block
+    shell: oc -n "myproject" exec fabric-tools -- bash -c "cp /fabric/config/configtx.yaml /fabric/ && cd /fabric && configtxgen -profile SampleMultiNodeEtcdRaft -channelID channel1 -outputBlock ./channel-artifacts/genesis.block"
+
+    30110
+
+    Failed to send StepRequest to 2, because: connection to 2(blockchain-orderer2:30110) is in state CONNECTING channel=byfn-sys-channel node=1
+
+
+    ORDERER_GENERAL_TLS_CLIENTAUTHREQUIRED=true
+    CORE_PEER_TLS_CLIENTAUTHREQUIRED=true
+
+    crypto config 
+    OrdererOrgs:
+              - Name: ProdOrderer
+                Domain: ProdOrdr_com
+                Specs:
+                 - Hostname: ProdOrderer1
+                   SANS:
+                     - "localhost"
+                     - "127.0.0.1"
+                - Hostname: ProdOrderer2
+                   SANS:
+                     - "localhost"
+                     - "127.0.0.1"
+                - Hostname: ProdOrderer3
+                   SANS:
+                     - "localhost"
+                     - "127.0.0.1"
