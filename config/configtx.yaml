@@ -25,12 +25,7 @@ Organizations:
         ID: OrdererMSP
 
         # MSPDir is the filesystem path which contains the MSP configuration
-        MSPDir: crypto-config/ordererOrganizations/example.com/users/Admin@example.com/msp
-
-        #MSPDir: crypto-config/ordererOrganizations/example.com/msp
-        
-        
-
+        MSPDir: crypto-config/ordererOrganizations/example.com/msp
 
         # Policies defines the set of policies at this level of the config tree
         # For organization policies, their canonical path is usually
@@ -78,9 +73,8 @@ Organizations:
             # AnchorPeers defines the location of peers which can be used
             # for cross org gossip communication.  Note, this value is only
             # encoded in the genesis block in the Application section context
-            - Host: blockchain-org1peer0
+            - Host: org2peer0
               Port: 30110
-
 
     - &Org2
         # DefaultOrg defines the organization which is used in the sampleconfig
@@ -113,7 +107,7 @@ Organizations:
             # AnchorPeers defines the location of peers which can be used
             # for cross org gossip communication.  Note, this value is only
             # encoded in the genesis block in the Application section context
-            - Host: blockchain-org2peer0
+            - Host: org2peer0
               Port: 30110
 
 ################################################################################
@@ -221,37 +215,8 @@ Orderer: &OrdererDefaults
     # Orderer Type: The orderer implementation to start
     OrdererType: etcdraft
 
-    # Addresses:
-    #     - orderer.example.com:31010
-
-    EtcdRaft:
-                Consenters:
-                - Host: blockchain-orderer
-                  Port: 31010
-                  ClientTLSCert: crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls/server.crt
-                  ServerTLSCert: crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls/server.crt
-                - Host: blockchain-orderer2
-                  Port: 31010
-                  ClientTLSCert: crypto-config/ordererOrganizations/example.com/orderers/orderer2.example.com/tls/server.crt
-                  ServerTLSCert: crypto-config/ordererOrganizations/example.com/orderers/orderer2.example.com/tls/server.crt
-                - Host: blockchain-orderer3
-                  Port: 31010
-                  ClientTLSCert: crypto-config/ordererOrganizations/example.com/orderers/orderer3.example.com/tls/server.crt
-                  ServerTLSCert: crypto-config/ordererOrganizations/example.com/orderers/orderer3.example.com/tls/server.crt
-                - Host: blockchain-orderer4
-                  Port: 31010
-                  ClientTLSCert: crypto-config/ordererOrganizations/example.com/orderers/orderer4.example.com/tls/server.crt
-                  ServerTLSCert: crypto-config/ordererOrganizations/example.com/orderers/orderer4.example.com/tls/server.crt
-                - Host: blockchain-orderer5
-                  Port: 31010
-                  ClientTLSCert: crypto-config/ordererOrganizations/example.com/orderers/orderer5.example.com/tls/server.crt
-                  ServerTLSCert: crypto-config/ordererOrganizations/example.com/orderers/orderer5.example.com/tls/server.crt
     Addresses:
-                - blockchain-orderer:31010
-                - blockchain-orderer2:31010
-                - blockchain-orderer3:31010
-                - blockchain-orderer4:31010
-                - blockchain-orderer5:31010
+        - orderer:31010
 
     # Batch Timeout: The amount of time to wait before creating a batch
     BatchTimeout: 2s
@@ -353,36 +318,35 @@ Profiles:
             <<: *ChannelCapabilities
         Orderer:
             <<: *OrdererDefaults
-            OrdererType: etcdraft
+            #OrdererType: etcdraft
             EtcdRaft:
                 Consenters:
-                - Host: blockchain-orderer
+                - Host: orderer
                   Port: 31010
-                  ClientTLSCert: crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls/server.crt
-                  ServerTLSCert: crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls/server.crt
-                - Host: blockchain-orderer2
+                  ClientTLSCert: crypto-config/ordererOrganizations/example.com/orderers/orderer/tls/server.crt
+                  ServerTLSCert: crypto-config/ordererOrganizations/example.com/orderers/orderer/tls/server.crt
+                - Host: orderer2
                   Port: 31010
-                  ClientTLSCert: crypto-config/ordererOrganizations/example.com/orderers/orderer2.example.com/tls/server.crt
-                  ServerTLSCert: crypto-config/ordererOrganizations/example.com/orderers/orderer2.example.com/tls/server.crt
-                - Host: blockchain-orderer3
+                  ClientTLSCert: crypto-config/ordererOrganizations/example.com/orderers/orderer2/tls/server.crt
+                  ServerTLSCert: crypto-config/ordererOrganizations/example.com/orderers/orderer2/tls/server.crt
+                - Host: orderer3
                   Port: 31010
-                  ClientTLSCert: crypto-config/ordererOrganizations/example.com/orderers/orderer3.example.com/tls/server.crt
-                  ServerTLSCert: crypto-config/ordererOrganizations/example.com/orderers/orderer3.example.com/tls/server.crt
-                - Host: blockchain-orderer4
+                  ClientTLSCert: crypto-config/ordererOrganizations/example.com/orderers/orderer3/tls/server.crt
+                  ServerTLSCert: crypto-config/ordererOrganizations/example.com/orderers/orderer3/tls/server.crt
+                - Host: orderer4
                   Port: 31010
-                  ClientTLSCert: crypto-config/ordererOrganizations/example.com/orderers/orderer4.example.com/tls/server.crt
-                  ServerTLSCert: crypto-config/ordererOrganizations/example.com/orderers/orderer4.example.com/tls/server.crt
-                - Host: blockchain-orderer5
+                  ClientTLSCert: crypto-config/ordererOrganizations/example.com/orderers/orderer4/tls/server.crt
+                  ServerTLSCert: crypto-config/ordererOrganizations/example.com/orderers/orderer4/tls/server.crt
+                - Host: orderer5
                   Port: 31010
-                  ClientTLSCert: crypto-config/ordererOrganizations/example.com/orderers/orderer5.example.com/tls/server.crt
-                  ServerTLSCert: crypto-config/ordererOrganizations/example.com/orderers/orderer5.example.com/tls/server.crt
+                  ClientTLSCert: crypto-config/ordererOrganizations/example.com/orderers/orderer5/tls/server.crt
+                  ServerTLSCert: crypto-config/ordererOrganizations/example.com/orderers/orderer5/tls/server.crt
             Addresses:
-                - blockchain-orderer:31010
-                - blockchain-orderer2:31010
-                - blockchain-orderer3:31010
-                - blockchain-orderer4:31010
-                - blockchain-orderer5:31010
-
+                - orderer:31010
+                - orderer2:31010
+                - orderer3:31010
+                - orderer4:31010
+                - orderer5:31010
 
             Organizations:
             - *OrdererOrg

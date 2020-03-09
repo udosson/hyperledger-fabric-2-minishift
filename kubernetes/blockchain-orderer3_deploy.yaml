@@ -1,19 +1,19 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: blockchain-orderer3
+  name: orderer3
 spec:
   replicas: 1
   template:
     metadata:
       labels:
-        name: blockchain-orderer3
+        name: orderer3
     spec:
       volumes:
       - name: fabricfiles
         persistentVolumeClaim:
           claimName: fabric-pvc
-
+  
       containers:
       - name: orderer
         image: hyperledger/fabric-orderer:2.0
@@ -26,7 +26,7 @@ spec:
         - name: ORDERER_CFG_PATH
           value: /fabric/
         - name: CONFIGTX_ORDERER_ADDRESSES
-          value: "blockchain-orderer3:31010"
+          value: "orderer3:31010"
         - name: ORDERER_GENERAL_LISTENADDRESS
           value: 0.0.0.0
         - name: ORDERER_GENERAL_LISTENPORT
@@ -34,31 +34,27 @@ spec:
         - name: ORDERER_GENERAL_LOGLEVEL
           value: debug
         - name: ORDERER_GENERAL_LOCALMSPDIR
-          value: /fabric/crypto-config/ordererOrganizations/example.com/orderers/orderer3.example.com/msp
+          value: /fabric/crypto-config/ordererOrganizations/example.com/orderers/orderer3/msp
         - name: ORDERER_GENERAL_LOCALMSPID
           value: OrdererMSP
-        - name: ORDERER_GENERAL_GENESISMETHOD
-          value: file
-        - name: ORDERER_GENERAL_GENESISFILE
-          value: /fabric/genesis.block
         - name: ORDERER_GENERAL_TLS_ENABLED
           value: "true"
         - name: ORDERER_GENERAL_TLS_PRIVATEKEY
-          value: /fabric/crypto-config/ordererOrganizations/example.com/orderers/orderer3.example.com/tls/server.key
+          value: /fabric/crypto-config/ordererOrganizations/example.com/orderers/orderer3/tls/server.key
         - name: ORDERER_GENERAL_TLS_CERTIFICATE
-          value: /fabric/crypto-config/ordererOrganizations/example.com/orderers/orderer3.example.com/tls/server.crt
+          value: /fabric/crypto-config/ordererOrganizations/example.com/orderers/orderer3/tls/server.crt
         - name: ORDERER_GENERAL_TLS_ROOTCAS
-          value: /fabric/crypto-config/ordererOrganizations/example.com/orderers/orderer3.example.com/tls/ca.crt
+          value: /fabric/crypto-config/ordererOrganizations/example.com/orderers/orderer3/tls/ca.crt
         - name: ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY
-          value: /fabric/crypto-config/ordererOrganizations/example.com/orderers/orderer3.example.com/tls/server.key
+          value: /fabric/crypto-config/ordererOrganizations/example.com/orderers/orderer3/tls/server.key
         - name: ORDERER_GENERAL_CLUSTER_CLIENTCERTIFICATE
-          value: /fabric/crypto-config/ordererOrganizations/example.com/orderers/orderer3.example.com/tls/server.crt
+          value: /fabric/crypto-config/ordererOrganizations/example.com/orderers/orderer3/tls/server.crt
         - name: ORDERER_GENERAL_CLUSTER_ROOTCAS
-          value: /fabric/crypto-config/ordererOrganizations/example.com/orderers/orderer3.example.com/tls/ca.crt
+          value: /fabric/crypto-config/ordererOrganizations/example.com/orderers/orderer3/tls/ca.crt
         - name: GODEBUG
           value: "netdns=go"
         - name: ORDERER_GENERAL_BOOTSTRAPFILE
-          value: /fabric/genesis.block
+          value: /fabric/channel-artifacts/genesis.block
         - name: ORDERER_GENERAL_BOOTSTRAPMETHOD
           value: file
         volumeMounts:

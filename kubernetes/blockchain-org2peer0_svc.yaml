@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: blockchain-org2peer0
+  name: org2peer0
   labels:
-    run: blockchain-org2peer0
+    run: org2peer0
 spec:
   type: ClusterIP 
   selector:
-    name: blockchain-org2peer0
+    name: org2peer0
   ports:
   - protocol: TCP
     port: 30110

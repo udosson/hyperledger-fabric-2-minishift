@@ -10,8 +10,8 @@
 
   - name: login as {{ username }} (must be cluster-admin)
     shell: "oc login -u system:admin"
-    #shell: "oc login -u {{ username }} -p {{ password }} {{ master_url }}"
-    #shell: oc login https://127.0.0.1:8443 --token=FwgcAV8Wz0TPuLIQYzNY9kKvLSoMS5MUvA0UzVXFl9s
+    # shell: "oc login -u {{ username }} -p {{ password }} {{ master_url }}"
+    # shell: oc login https://127.0.0.1:8443 --token=FwgcAV8Wz0TPuLIQYzNY9kKvLSoMS5MUvA0UzVXFl9s
 
 
   - name: Create project {{ project_name }}
@@ -41,16 +41,18 @@
   - name: Create fabric tools dirs
     shell: "oc -n {{ project_name }} exec -it fabric-tools -- mkdir -p /fabric/config"
 
-  - name: Copy files to fabric tools containers
-    shell: "oc -n {{ project_name }} cp {{ item }} fabric-tools:/fabric/config/"
-    with_items:
-       - config/configtx.yaml
-       - config/crypto-config.yaml
-       - config/chaincode/
-       #TODO --> instantiate_chaincode.sh anpasen / Vlt. deployCC.sh script?
-       - instantiate_chaincode.sh
-    ignore_errors: true
-  
+  - name: Copy config files to fabric tools containers
+    shell: "oc -n {{ project_name }} cp config fabric-tools:/fabric"
+
+  - name: Copy chaincode to pvc
+    shell: "oc -n {{ project_name }} cp chaincode/ fabric-tools:/fabric"
+    
+  - name: Copy scripts to pvc
+    shell: "oc -n {{ project_name }} cp scripts fabric-tools:/fabric"
+
+  - name: Copy external-builder to pvc
+    shell: "oc -n {{ project_name }} cp external-builder fabric-tools:/fabric"
+
   - name: Cryptogen
     shell: oc -n "{{ project_name }}" exec fabric-tools -- bash -c "cryptogen generate --config /fabric/config/crypto-config.yaml"
   
@@ -61,58 +63,49 @@
     shell: oc -n "{{ project_name }}" exec fabric-tools -- bash -c 'for file in $(find /fabric/ -iname *_sk); do echo $file; dir=$(dirname $file); mv ${dir}/*_sk ${dir}/key.pem; done'
 
   - name: Generate orderer genesis block
-    shell: oc -n "{{ project_name }}" exec fabric-tools -- bash -c "cp /fabric/config/configtx.yaml /fabric/ && cd /fabric && configtxgen -profile SampleMultiNodeEtcdRaft -channelID byfn-sys-channel -outputBlock genesis.block"
+    shell: oc -n "{{ project_name }}" exec fabric-tools -- bash -c "cp /fabric/config/configtx.yaml /fabric/ && cd /fabric && configtxgen -profile SampleMultiNodeEtcdRaft -channelID byfn-sys-channel -outputBlock ./channel-artifacts/genesis.block"
 
   - name: Generate channel configuration transaction
-    shell: oc -n "{{ project_name }}" exec fabric-tools -- bash -c "cp /fabric/config/configtx.yaml /fabric/ && cd /fabric && configtxgen -profile TwoOrgsChannel -channelID channel1 --outputCreateChannelTx channel.tx"
+    shell: oc -n "{{ project_name }}" exec fabric-tools -- bash -c "cp /fabric/config/configtx.yaml /fabric/ && cd /fabric && configtxgen -profile TwoOrgsChannel -channelID mychannel --outputCreateChannelTx ./channel-artifacts/channel.tx"
 
   - name: Create Anchor Peers
     shell: oc -n "{{ project_name }}" exec fabric-tools -- bash -c "{{ item }}"
     with_items:
-      - "cd /fabric && configtxgen -profile TwoOrgsChannel -outputAnchorPeersUpdate ./Org1MSPanchors.tx -channelID channel1 -asOrg Org1MSP"
-      - "cd /fabric && configtxgen -profile TwoOrgsChannel -outputAnchorPeersUpdate ./Org2MSPanchors.tx -channelID channel1 -asOrg Org2MSP"
+      - "cd /fabric && configtxgen -profile TwoOrgsChannel -outputAnchorPeersUpdate ./channel-artifacts/Org1MSPanchors.tx -channelID mychannel -asOrg Org1MSP"
+      - "cd /fabric && configtxgen -profile TwoOrgsChannel -outputAnchorPeersUpdate ./channel-artifacts/Org2MSPanchors.tx -channelID mychannel -asOrg Org2MSP"
 
   - name: Fix permissions
     shell: oc -n "{{ project_name }}" exec fabric-tools -- bash -c "chmod a+rx /fabric/* -R"
 
-  # - name: Create Blockchain-ca deploy
-  #   shell: oc -n "{{ project_name }}" apply -f kubernetes/blockchain-ca_deploy.yaml
-
-  # - name: Create service deploy
-  #   shell: oc -n "{{ project_name }}" apply -f kubernetes/blockchain-ca_svc.yaml
-
-  # - name: Install zookeeper and kafka
-  #   shell: "oc apply -f kafka -n {{ project_name }}"
-
   - name: Create Orderer
-    shell: "oc -n {{ project_name }} apply -f kubernetes/blockchain-orderer_deploy.yaml"
-
-  - name: Create orderer svc
-    shell: "oc expose deployment blockchain-orderer --port=31010 -n {{ project_name }} || echo 'Already exists'"
-
+    shell: oc -n "{{ project_name }}" apply -f "{{ item }}"
+    with_items:
+      - kubernetes/blockchain-orderer_deploy.yaml
+      - kubernetes/blockchain-orderer_svc.yaml
+  
   - name: Create Orderer2
-    shell: "oc -n {{ project_name }} apply -f kubernetes/blockchain-orderer2_deploy.yaml"
-
-  - name: Create orderer2 svc
-    shell: "oc expose deployment blockchain-orderer2 --port=31010 -n {{ project_name }} || echo 'Already exists'"
+    shell: oc -n "{{ project_name }}" apply -f "{{ item }}"
+    with_items:
+      - kubernetes/blockchain-orderer2_deploy.yaml
+      - kubernetes/blockchain-orderer2_svc.yaml
 
   - name: Create Orderer3
-    shell: "oc -n {{ project_name }} apply -f kubernetes/blockchain-orderer3_deploy.yaml"
-
-  - name: Create orderer3 svc
-    shell: "oc expose deployment blockchain-orderer3 --port=31010 -n {{ project_name }} || echo 'Already exists'"
+    shell: oc -n "{{ project_name }}" apply -f "{{ item }}"
+    with_items:
+      - kubernetes/blockchain-orderer3_deploy.yaml
+      - kubernetes/blockchain-orderer3_svc.yaml
 
   - name: Create Orderer4
-    shell: "oc -n {{ project_name }} apply -f kubernetes/blockchain-orderer4_deploy.yaml"
-
-  - name: Create orderer4 svc
-    shell: "oc expose deployment blockchain-orderer4 --port=31010 -n {{ project_name }} || echo 'Already exists'"
+    shell: oc -n "{{ project_name }}" apply -f "{{ item }}"
+    with_items:
+      - kubernetes/blockchain-orderer4_deploy.yaml
+      - kubernetes/blockchain-orderer4_svc.yaml
 
   - name: Create Orderer5
-    shell: "oc -n {{ project_name }} apply -f kubernetes/blockchain-orderer5_deploy.yaml"
-
-  - name: Create orderer5 svc
-    shell: "oc expose deployment blockchain-orderer5 --port=31010 -n {{ project_name }} || echo 'Already exists'"
+    shell: oc -n "{{ project_name }}" apply -f "{{ item }}"
+    with_items:
+      - kubernetes/blockchain-orderer5_deploy.yaml
+      - kubernetes/blockchain-orderer5_svc.yaml
 
 #TODO: core.yaml mounten
 
@@ -131,6 +124,28 @@
       - kubernetes/blockchain-org2peer1_deploy.yaml
       - kubernetes/blockchain-org2peer0_svc.yaml
       - kubernetes/blockchain-org2peer1_svc.yaml
+
+  - name: Wait till all pods are running 
+    shell: oc get pods -o json
+    register: oc_get_pods
+    until: oc_get_pods.stdout|from_json|json_query('items[*].status.phase')|unique == ["Running"]
+    retries: 60
+    delay: 20
+
+  - name: Create channel
+    shell: >
+      oc -n "{{ project_name }}" exec fabric-tools -- bash -c 'export FABRIC_CFG_PATH=/fabric && export CORE_PEER_MSPCONFIGPATH=/fabric/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/ && export CORE_PEER_ADDRESS=org1peer0:30110 && export CORE_PEER_LOCALMSPID="Org1MSP" && export CORE_PEER_TLS_ROOTCERT_FILE=/fabric/crypto-config/peerOrganizations/org1.example.com/peers/org1peer0/tls/ca.crt && export CHANNEL_NAME=mychannel && export FABRIC_CFG_PATH=/fabric/config/ && peer channel create -o orderer:31010 -c $CHANNEL_NAME -f /fabric/channel-artifacts/channel.tx --tls --cafile /fabric/crypto-config/ordererOrganizations/example.com/orderers/orderer/msp/tlscacerts/tlsca.example.com-cert.pem'
+  
+    register: channel_result
+    failed_when: "'version 0, but got version 1' not in channel_result.stderr and channel_result.rc != 0"
+
+  - name: Join channel Org1
+    shell: >
+      oc -n "{{ project_name }}" exec fabric-tools -- bash -c 'export CORE_PEER_MSPCONFIGPATH=/fabric/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/ && export CORE_PEER_ADDRESS=org1peer0:30110 && export CORE_PEER_LOCALMSPID="Org1MSP" && export CORE_PEER_TLS_ROOTCERT_FILE=/fabric/crypto-config/peerOrganizations/org1.example.com/peers/org1peer0/tls/ca.crt && export CHANNEL_NAME=mychannel && export FABRIC_CFG_PATH=/fabric/config/ && peer channel join -b $CHANNEL_NAME.block'
+
+  - name: Join channel Org2
+    shell: >
+      oc -n "{{ project_name }}" exec fabric-tools -- bash -c 'export CORE_PEER_MSPCONFIGPATH=/fabric/crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp/ && export CORE_PEER_ADDRESS=org2peer0:30110 && export CORE_PEER_LOCALMSPID="Org2MSP" && export CORE_PEER_TLS_ROOTCERT_FILE=/fabric/crypto-config/peerOrganizations/org2.example.com/peers/org2peer0/tls/ca.crt && export CHANNEL_NAME=mychannel && export FABRIC_CFG_PATH=/fabric/config/ && peer channel join -b $CHANNEL_NAME.block'
 
   
     
