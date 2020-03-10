@@ -15,6 +15,6 @@ spec:
   - protocol: TCP
     port: 30111
     name: events
-  - protocol: TCP
-    port: 5984
-    name: couchdb
+  # - protocol: TCP
+  #   port: 5984
+  #   name: couchdb

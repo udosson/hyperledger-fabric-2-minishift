@@ -14,8 +14,10 @@ spec:
     - name: fabric-tools
       image: hyperledger/fabric-tools:2.0
       imagePullPolicy: Always
+      stdin: true 
+      tty: true
       #       command: ["/bin/bash", "-c", "sleep 48h"]
-      command: ["sh", "-c", "sleep 48h"]
+      command: ["/bin/bash", "-c", "sleep 48h"]
       env:
         - name: CORE_PEER_ID
           value: fabric-tools
@@ -39,6 +41,12 @@ spec:
           value: "Europe/Amsterdam"
         - name: FABRIC_CFG_PATH
           value: "/fabric"
+        - name: GOPATH
+          value: /opt/gopath
+        - name: GOPATH
+          value: /fabric
+        - name: GODEBUG
+          value: "netdns=go"
       volumeMounts:
         - mountPath: /fabric
           name: fabricfiles

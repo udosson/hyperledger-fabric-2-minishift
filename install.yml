@@ -147,87 +147,18 @@
     shell: >
       oc -n "{{ project_name }}" exec fabric-tools -- bash -c 'export CORE_PEER_MSPCONFIGPATH=/fabric/crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp/ && export CORE_PEER_ADDRESS=org2peer0:30110 && export CORE_PEER_LOCALMSPID="Org2MSP" && export CORE_PEER_TLS_ROOTCERT_FILE=/fabric/crypto-config/peerOrganizations/org2.example.com/peers/org2peer0/tls/ca.crt && export CHANNEL_NAME=mychannel && export FABRIC_CFG_PATH=/fabric/config/ && peer channel join -b $CHANNEL_NAME.block'
 
+  - name: Update anchor peers Org1
+    shell: >
+      oc -n "{{ project_name }}" exec fabric-tools -- bash -c 'export CORE_PEER_MSPCONFIGPATH=/fabric/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/ && export CORE_PEER_ADDRESS=org1peer0:30110 && export CORE_PEER_LOCALMSPID="Org1MSP" && export CORE_PEER_TLS_ROOTCERT_FILE=/fabric/crypto-config/peerOrganizations/org1.example.com/peers/org1peer0/tls/ca.crt && export CHANNEL_NAME=mychannel && export FABRIC_CFG_PATH=/fabric/config/ && peer channel update -o orderer:31010  -c $CHANNEL_NAME -f /fabric/channel-artifacts/Org1MSPanchors.tx --tls --cafile /fabric/crypto-config/ordererOrganizations/example.com/orderers/orderer/msp/tlscacerts/tlsca.example.com-cert.pem'
+
+  - name: Update anchor peers Org2
+    shell: >
+       oc -n "{{ project_name }}"  exec fabric-tools -- bash -c 'export CORE_PEER_MSPCONFIGPATH=/fabric/crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp/ && export CORE_PEER_ADDRESS=org2peer0:30110 && export CORE_PEER_LOCALMSPID="Org2MSP" && export CORE_PEER_TLS_ROOTCERT_FILE=/fabric/crypto-config/peerOrganizations/org2.example.com/peers/org2peer0/tls/ca.crt && export CHANNEL_NAME=mychannel && export FABRIC_CFG_PATH=/fabric/config/ && peer channel update -o orderer:31010  -c $CHANNEL_NAME -f /fabric/channel-artifacts/Org2MSPanchors.tx --tls --cafile /fabric/crypto-config/ordererOrganizations/example.com/orderers/orderer/msp/tlscacerts/tlsca.example.com-cert.pem'
   
-    
+  - name: Let chaincode process give it to its best
+    shell: >
+      oc -n "{{ project_name }}" exec fabric-tools -- bash -c '/fabric/scripts/deployCC.sh'
 
-  # - name: Create channel
-  #   shell: >
-  #     oc -n "{{ project_name }}" exec fabric-tools -- bash -c 'export FABRIC_CFG_PATH=/fabric && export CHANNEL_NAME="channel1" && export ORDERER_URL="blockchain-orderer:31010" && export CORE_PEER_ADDRESSAUTODETECT="false" && export CORE_PEER_NETWORKID="nid1" && export CORE_PEER_LOCALMSPID="Org1MSP" && export CORE_PEER_MSPCONFIGPATH="/fabric/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/msp/" && cd /fabric && configtxgen -profile FourOrgsChannel -outputCreateChannelTx ${CHANNEL_NAME}.tx -channelID ${CHANNEL_NAME} && export FABRIC_CFG_PATH=/etc/hyperledger/fabric && peer channel create -o ${ORDERER_URL} -c ${CHANNEL_NAME} -f /fabric/${CHANNEL_NAME}.tx'
-  #   register: channel_result
-  #   failed_when: "'version 0, but got version 1' not in channel_result.stderr and channel_result.rc != 0"
-
-  # - name: Join Org1MSP to Our Channel
-  #   shell: >
-  #     oc -n "{{ project_name }}" exec fabric-tools -- bash -c 'export CHANNEL_NAME="channel1" && export CORE_PEER_NETWORKID="nid1" && export ORDERER_URL="blockchain-orderer:31010" && export FABRIC_CFG_PATH="/etc/hyperledger/fabric" && export CORE_PEER_LOCALMSPID="Org1MSP" && export CORE_PEER_MSPID="Org1MSP" && export CORE_PEER_MSPCONFIGPATH="/fabric/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp" && export CORE_PEER_ADDRESS="blockchain-org1peer1:30110" && peer channel fetch newest -o ${ORDERER_URL} -c ${CHANNEL_NAME} && peer channel join -b ${CHANNEL_NAME}_newest.block && rm -rf /${CHANNEL_NAME}_newest.block && export CORE_PEER_ADDRESS="blockchain-org1peer2:30110" && peer channel fetch newest -o ${ORDERER_URL} -c ${CHANNEL_NAME} && peer channel join -b ${CHANNEL_NAME}_newest.block && rm -rf /${CHANNEL_NAME}_newest.block'
-  #   register: org1_result
-  #   failed_when: "'LedgerID already exists' not in org1_result.stderr and org1_result.rc != 0"
-
-  # - name: Join Org2MSP to Our Channel
-  #   shell: > 
-  #     oc -n "{{ project_name }}" exec fabric-tools -- bash -c 'export CHANNEL_NAME="channel1" && export CORE_PEER_NETWORKID="nid1" && export ORDERER_URL="blockchain-orderer:31010" && export FABRIC_CFG_PATH="/etc/hyperledger/fabric" && export CORE_PEER_LOCALMSPID="Org2MSP" && export CORE_PEER_MSPID="Org2MSP" && export CORE_PEER_MSPCONFIGPATH="/fabric/crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp" && export CORE_PEER_ADDRESS="blockchain-org2peer1:30110" && peer channel fetch newest -o ${ORDERER_URL} -c ${CHANNEL_NAME} && peer channel join -b ${CHANNEL_NAME}_newest.block && rm -rf /${CHANNEL_NAME}_newest.block && export CORE_PEER_ADDRESS="blockchain-org2peer2:30110" && peer channel fetch newest -o ${ORDERER_URL} -c ${CHANNEL_NAME} && peer channel join -b ${CHANNEL_NAME}_newest.block && rm -rf /${CHANNEL_NAME}_newest.block'
-  #   register: org2_result
-  #   failed_when: "'LedgerID already exists' not in org2_result.stderr and org2_result.rc != 0"
-
-  # - name: Join Org3MSP to Our Channel
-  #   shell: >
-  #     oc -n "{{ project_name }}" exec fabric-tools -- bash -c 'export CHANNEL_NAME="channel1" && export CORE_PEER_NETWORKID="nid1" && export ORDERER_URL="blockchain-orderer:31010" && export FABRIC_CFG_PATH="/etc/hyperledger/fabric" && export CORE_PEER_LOCALMSPID="Org3MSP" && export CORE_PEER_MSPID="Org3MSP" && export CORE_PEER_MSPCONFIGPATH="/fabric/crypto-config/peerOrganizations/org3.example.com/users/Admin@org3.example.com/msp" && export CORE_PEER_ADDRESS="blockchain-org3peer1:30110" && peer channel fetch newest -o ${ORDERER_URL} -c ${CHANNEL_NAME} && peer channel join -b ${CHANNEL_NAME}_newest.block && rm -rf /${CHANNEL_NAME}_newest.block && export CORE_PEER_ADDRESS="blockchain-org3peer2:30110" && peer channel fetch newest -o ${ORDERER_URL} -c ${CHANNEL_NAME} && peer channel join -b ${CHANNEL_NAME}_newest.block && rm -rf /${CHANNEL_NAME}_newest.block'
-  #   register: org3_result
-  #   failed_when: "'LedgerID already exists' not in org3_result.stderr and org3_result.rc != 0"
-
-  # - name: Join Org4MSP to Our Channel
-  #   shell: >
-  #     oc -n "{{ project_name }}" exec fabric-tools -- bash -c 'export CHANNEL_NAME="channel1" && export CORE_PEER_NETWORKID="nid1" && export ORDERER_URL="blockchain-orderer:31010" && export FABRIC_CFG_PATH="/etc/hyperledger/fabric" && export CORE_PEER_LOCALMSPID="Org4MSP" && export CORE_PEER_MSPID="Org4MSP" && export CORE_PEER_MSPCONFIGPATH="/fabric/crypto-config/peerOrganizations/org4.example.com/users/Admin@org4.example.com/msp" && export CORE_PEER_ADDRESS="blockchain-org4peer1:30110" && peer channel fetch newest -o ${ORDERER_URL} -c ${CHANNEL_NAME} && peer channel join -b ${CHANNEL_NAME}_newest.block && rm -rf /${CHANNEL_NAME}_newest.block && export CORE_PEER_ADDRESS="blockchain-org4peer2:30110" && peer channel fetch newest -o ${ORDERER_URL} -c ${CHANNEL_NAME} && peer channel join -b ${CHANNEL_NAME}_newest.block && rm -rf /${CHANNEL_NAME}_newest.block'
-  #   register: org4_result
-  #   failed_when: "'LedgerID already exists' not in org4_result.stderr and org4_result.rc != 0"
-
-  # - name: Install Chaincode on Org1MSP
-  #   shell: >
-  #     oc -n "{{ project_name }}" exec fabric-tools -- bash -c 'cp -r /fabric/config/chaincode $GOPATH/src/ && export CHAINCODE_NAME="cc" && export CHAINCODE_VERSION="1.0" && export FABRIC_CFG_PATH="/etc/hyperledger/fabric" && export CORE_PEER_MSPCONFIGPATH="/fabric/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp" && export CORE_PEER_LOCALMSPID="Org1MSP" && export CORE_PEER_ADDRESS="blockchain-org1peer1:30110" && peer chaincode install -n ${CHAINCODE_NAME} -v ${CHAINCODE_VERSION} -p chaincode_example02/ && export CORE_PEER_ADDRESS="blockchain-org1peer2:30110" && peer chaincode install -n ${CHAINCODE_NAME} -v ${CHAINCODE_VERSION} -p chaincode_example02/'
-
-  # - name: Install Chaincode on Org2MSP
-  #   shell: >
-  #     oc -n "{{ project_name }}" exec fabric-tools -- bash -c 'cp -r /fabric/config/chaincode $GOPATH/src/ && export CHAINCODE_NAME="cc" && export CHAINCODE_VERSION="1.0" && export FABRIC_CFG_PATH="/etc/hyperledger/fabric" && export CORE_PEER_MSPCONFIGPATH="/fabric/crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp" && export CORE_PEER_LOCALMSPID="Org2MSP" && export CORE_PEER_ADDRESS="blockchain-org2peer1:30110" && peer chaincode install -n ${CHAINCODE_NAME} -v ${CHAINCODE_VERSION} -p chaincode_example02/ && export CORE_PEER_ADDRESS="blockchain-org2peer2:30110" && peer chaincode install -n ${CHAINCODE_NAME} -v ${CHAINCODE_VERSION} -p chaincode_example02/'
-
-  # - name: Install Chaincode on Org3MSP
-  #   shell: >
-  #     oc -n "{{ project_name }}" exec -it fabric-tools -- bash -c 'cp -r /fabric/config/chaincode $GOPATH/src/ && export CHAINCODE_NAME="cc" && export CHAINCODE_VERSION="1.0" && export FABRIC_CFG_PATH="/etc/hyperledger/fabric" && export CORE_PEER_MSPCONFIGPATH="/fabric/crypto-config/peerOrganizations/org3.example.com/users/Admin@org3.example.com/msp" && export CORE_PEER_LOCALMSPID="Org3MSP" && export CORE_PEER_ADDRESS="blockchain-org3peer1:30110" && peer chaincode install -n ${CHAINCODE_NAME} -v ${CHAINCODE_VERSION} -p chaincode_example02/ && export CORE_PEER_ADDRESS="blockchain-org3peer2:30110" && peer chaincode install -n ${CHAINCODE_NAME} -v ${CHAINCODE_VERSION} -p chaincode_example02/'
-
-  # - name: Install Chaincode on Org4MSP
-  #   shell: >
-  #     oc -n "{{ project_name }}" exec -it fabric-tools -- bash -c 'cp -r /fabric/config/chaincode $GOPATH/src/ && export CHAINCODE_NAME="cc" && export CHAINCODE_VERSION="1.0" && export FABRIC_CFG_PATH="/etc/hyperledger/fabric" && export CORE_PEER_MSPCONFIGPATH="/fabric/crypto-config/peerOrganizations/org4.example.com/users/Admin@org4.example.com/msp" && export CORE_PEER_LOCALMSPID="Org4MSP" && export CORE_PEER_ADDRESS="blockchain-org4peer1:30110" && peer chaincode install -n ${CHAINCODE_NAME} -v ${CHAINCODE_VERSION} -p chaincode_example02/ && export CORE_PEER_ADDRESS="blockchain-org4peer2:30110" && peer chaincode install -n ${CHAINCODE_NAME} -v ${CHAINCODE_VERSION} -p chaincode_example02/'
-
-  # - name: Instantiate Chaincode
-  #   shell: oc -n "{{ project_name }}" exec -it fabric-tools -- bash -c '/fabric/config/instantiate_chaincode.sh'
-  #   register: chaincode_result
-  #   failed_when: "'already exists' not in chaincode_result.stderr and chaincode_result.rc != 0"
-
-  # - name: Update channel from org1 to reflect Anchor Peers
-  #   shell: |
-  #     pod=$(oc get pods -n "{{ project_name }}" | grep blockchain-org1peer1 | awk '{print $1}')
-  #     oc exec $pod -- peer channel update -f /fabric/Org1MSPanchors.tx -c channel1 -o blockchain-orderer:31010
-  #   register: channel_org1
-  #   failed_when: "'version 0, but got version 1' not in channel_org1.stderr and channel_org1.rc != 0"
-  
-  # - name: Update channel from org2 to reflect Anchor Peers
-  #   shell: |
-  #     pod=$(oc get pods -n "{{ project_name }}" | grep blockchain-org2peer1 | awk '{print $1}')
-  #     oc exec $pod -- peer channel update -f /fabric/Org2MSPanchors.tx -c channel1 -o blockchain-orderer:31010
-  #   register: channel_org2
-  #   failed_when: "'version 0, but got version 1' not in channel_org2.stderr and channel_org2.rc != 0"
-
-  # - name: Update channel from org3 to reflect Anchor Peers
-  #   shell: |
-  #     pod=$(oc get pods -n "{{ project_name }}" | grep blockchain-org3peer1 | awk '{print $1}')
-  #     oc exec $pod -- peer channel update -f /fabric/Org3MSPanchors.tx -c channel1 -o blockchain-orderer:31010
-  #   register: channel_org3
-  #   failed_when: "'version 0, but got version 1' not in channel_org3.stderr and channel_org3.rc != 0"
-
-  # - name: Update channel from org4 to reflect Anchor Peers
-  #   shell: |
-  #     pod=$(oc get pods -n "{{ project_name }}" | grep blockchain-org4peer1 | awk '{print $1}')
-  #     oc exec $pod -- peer channel update -f /fabric/Org4MSPanchors.tx -c channel1 -o blockchain-orderer:31010
-  #   register: channel_org4
-  #   failed_when: "'version 0, but got version 1' not in channel_org4.stderr and channel_org4.rc != 0"
   
   # - name: Deploy Hyperledger Explorer Database
   #   shell: "oc apply -f kubernetes/blockchain-explorer-db_deploy.yaml -n {{ project_name }}"

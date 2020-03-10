@@ -1,0 +1,144 @@
+{
+  "network-configs": {
+    "network-1": {
+      "version": "1.0",
+      "clients": {
+        "client-1": {
+          "tlsEnable": false,
+          "organization": "Org1MSP",
+          "channel": "mychannel",
+          "credentialStore": {
+            "path": "./tmp/credentialStore_Org1/credential",
+            "cryptoStore": {
+              "path": "./tmp/credentialStore_Org1/crypto"
+            }
+          }
+        }
+      },
+      "channels": {
+        "channel1": {
+          "peers": {
+            "org1peer0": {},
+            "org1peer1": {},
+            "org2peer0": {},
+            "org2peer1": {}
+          },
+          "orderers": {
+            "orderer" : {},
+            "orderer2": {},
+            "orderer3": {},
+            "orderer4": {},
+            "orderer5": {}
+          },
+          "connection": {
+            "timeout": {
+              "peer": {
+                "endorser": "6000",
+                "eventHub": "6000",
+                "eventReg": "6000"
+              }
+            }
+          }
+        }
+      },
+      "organizations": {
+        "Org1MSP": {
+          "mspid": "Org1MSP",
+          "fullpath": false,
+          "adminPrivateKey": {
+            "path":
+              "/fabric/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/keystore"
+          },
+          "signedCert": {
+            "path":
+              "/fabric/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/signcerts"
+          }
+        },
+        "Org2MSP": {
+          "mspid": "Org2MSP",
+          "fullpath": false,
+          "adminPrivateKey": {
+            "path":
+              "/fabric/crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp/keystore"
+          },
+          "signedCert": {
+            "path":
+              "/fabric/crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp/signcerts"
+          }
+        },
+        "OrdererMSP": {
+          "mspid": "OrdererMSP",
+          "adminPrivateKey": {
+            "path":
+              "/fabric/crypto-config/ordererOrganizations/example.com/users/Admin@example.com/msp/keystore"
+          }
+        }
+      },
+      "peers": {
+        "org1peer0": {
+          "tlsCACerts": {
+            "path":
+              "/fabric/crypto-config/peerOrganizations/org1.example.com/peers/org1peer0/tls/ca.crt"
+          },
+          "url": "grpc://org1peer1:30110",
+          "eventUrl": "grpc://org1peer1:30111",
+          "grpcOptions": {
+            "ssl-target-name-override": "org1peer0"
+          }
+        },
+        "org1peer1": {
+          "tlsCACerts": {
+            "path":
+              "/fabric/crypto-config/peerOrganizations/org1.example.com/peers/org1peer1/tls/ca.crt"
+          },
+          "url": "grpc://org1peer1:30110",
+          "eventUrl": "grpc://org1peer1:30111",
+          "grpcOptions": {
+            "ssl-target-name-override": "org1peer1"
+          }
+        },
+        "org2peer0": {
+          "tlsCACerts": {
+            "path":
+              "/fabric/crypto-config/peerOrganizations/org2.example.com/peers/org2peer0/tls/ca.crt"
+          },
+          "url": "grpc://org2peer0:30110",
+          "eventUrl": "grpc://oorg2peer0:30111",
+          "grpcOptions": {
+            "ssl-target-name-override": "org2peer0"
+          }
+        },
+        "org2peer1": {
+          "tlsCACerts": {
+            "path":
+              "/fabric/crypto-config/peerOrganizations/org2.example.com/peers/org2peer1/tls/ca.crt"
+          },
+          "url": "grpc://org2peer1:30110",
+          "eventUrl": "grpc://org2peer1:30111",
+          "grpcOptions": {
+            "ssl-target-name-override": "org2peer1"
+          }
+        }
+      },
+      "orderers": {
+        "orderer": {
+          "url": "grpc://orderer:31010"
+        },
+        "orderer2": {
+          "url": "grpc://orderer2:31010"
+        },
+        "orderer3": {
+          "url": "grpc://orderer3:31010"
+        },
+        "orderer4": {
+          "url": "grpc://orderer4:31010"
+        },
+        "orderer5": {
+          "url": "grpc://orderer5:31010"
+        }
+      }
+    }
+  },
+  "configtxgenToolPath": "/fabric-path/workspace/fabric-samples/bin",
+  "license": "Apache-2.0"
+}

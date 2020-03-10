@@ -13,69 +13,45 @@
     #shell: "oc login -u {{ username }} -p {{ password }} {{ master_url }}"
     #shell: oc login https://127.0.0.1:8443 --token=FwgcAV8Wz0TPuLIQYzNY9kKvLSoMS5MUvA0UzVXFl9s
 
-  # - name: Let chaincode process give it to its best
-  #   shell: >
-  #     oc -n "{{ project_name }}" exec fabric-tools -- bash -c '/fabric/scripts/deployCC.sh'
+  - name: Add permissions
+    shell: "oc adm policy add-scc-to-user {{ item }} -z default -n {{ project_name }}"
+    with_items:
+      - anyuid
+      - privileged
 
-  - name: Package chaincode on Org1
-    shell: >
-      oc -n "{{ project_name }}" exec fabric-tools -- bash -c 'export CORE_PEER_TLS_ROOTCERT_FILE=/fabric/crypto-config/peerOrganizations/org1.example.com/peers/org1peer0/tls/ca.crt && export CC_RUNTIME_LANGUAGE="golang" && export CHAINCODE_VERSION="1.0" && export FABRIC_CFG_PATH="/etc/hyperledger/fabric" && export CORE_PEER_MSPCONFIGPATH="/fabric/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp" && export CORE_PEER_LOCALMSPID="Org1MSP" && export CORE_PEER_ADDRESS="org1peer0:30110" && peer lifecycle chaincode package fabcar.tar.gz --path /fabric/chaincode/fabcar/go/ --lang ${CC_RUNTIME_LANGUAGE} --label fabcar_${CHAINCODE_VERSION}'  
-      
-  - name: Install chaincode on Org1
-    shell: >
-      oc -n "{{ project_name }}" exec fabric-tools -- bash -c 'export CORE_PEER_TLS_ROOTCERT_FILE=/fabric/crypto-config/peerOrganizations/org1.example.com/peers/org1peer0/tls/ca.crt && export CC_RUNTIME_LANGUAGE="golang" && export CHAINCODE_VERSION="1.0" && export FABRIC_CFG_PATH="/etc/hyperledger/fabric" && export CORE_PEER_MSPCONFIGPATH="/fabric/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp" && export CORE_PEER_LOCALMSPID="Org1MSP" && export CORE_PEER_ADDRESS="org1peer0:30110" && peer lifecycle chaincode install fabcar.tar.gz'
+  - name: Deploy Hyperledger Explorer Database
+    shell: "oc apply -f kubernetes/blockchain-explorer-db_deploy.yaml -n {{ project_name }}"
 
-  - name: Install chaincode on Org2
-    shell: >
-      oc -n "{{ project_name }}" exec fabric-tools -- bash -c 'export CORE_PEER_TLS_ROOTCERT_FILE=/fabric/crypto-config/peerOrganizations/org2.example.com/peers/org2peer0/tls/ca.crt && export CC_RUNTIME_LANGUAGE="golang" && export CHAINCODE_VERSION="1.0" && export FABRIC_CFG_PATH="/etc/hyperledger/fabric" && export CORE_PEER_MSPCONFIGPATH="/fabric/crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp" && export CORE_PEER_LOCALMSPID="Org2MSP" && export CORE_PEER_ADDRESS="org2peer0:30110" && peer lifecycle chaincode install fabcar.tar.gz'
+  - name: Create Explorer Service
+    shell: "oc apply -f kubernetes/blockchain-explorer-db_svc.yaml -n {{ project_name }}"
 
-  - name: Query installed chaincode
-    shell: >
-      oc -n "{{ project_name }}" exec fabric-tools -- bash -c 'export CORE_PEER_TLS_ROOTCERT_FILE=/fabric/crypto-config/peerOrganizations/org1.example.com/peers/org1peer0/tls/ca.crt && export CC_RUNTIME_LANGUAGE="golang" && export CHAINCODE_VERSION="1.0" && export FABRIC_CFG_PATH="/etc/hyperledger/fabric" && export CORE_PEER_MSPCONFIGPATH="/fabric/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp" && export CORE_PEER_LOCALMSPID="Org1MSP" && export CORE_PEER_ADDRESS="org1peer0:30110" && peer lifecycle chaincode queryinstalled >&log.txt && cat log.txt && export PACKAGE_ID=$(sed -n "/fabcar_${VERSION}/{s/^Package ID: //; s/, Label:.*$//; p;}" log.txt)'
+  - name: Wait for postgresql to be ready
+    shell: oc get po -n "{{ project_name }}" | grep -i blockchain-explorer-db
+    register: postgresql_explorer
+    until: postgresql_explorer.stdout.find("Running") != -1
+    retries: 60
+    delay: 40
 
-  - name: Approve chaincode for Org1
-    shell: >
-      oc -n "{{ project_name }}" exec fabric-tools -- bash -c 'export CORE_PEER_TLS_ROOTCERT_FILE=/fabric/crypto-config/peerOrganizations/org1.example.com/peers/org1peer0/tls/ca.crt && export CC_RUNTIME_LANGUAGE="golang" && export CHAINCODE_VERSION="1.0" && export FABRIC_CFG_PATH="/etc/hyperledger/fabric" && export CORE_PEER_MSPCONFIGPATH="/fabric/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp" && export CORE_PEER_LOCALMSPID="Org1MSP" && export CORE_PEER_ADDRESS="org1peer0:30110" && export CHANNEL_NAME=mychannel && export ORDERER_CA="/fabric/crypto-config/ordererOrganizations/example.com/orderers/orderer/msp/tlscacerts/tlsca.example.com-cert.pem" && peer lifecycle chaincode approveformyorg -o orderer:31010  --ordererTLSHostnameOverride orderer --tls --cafile $ORDERER_CA --channelID $CHANNEL_NAME --name fabcar --version ${VERSION} --init-required --package-id ${PACKAGE_ID}'
+  - name: Populate database
+    shell: |
+      pod=$(oc get pods | grep blockchain-explorer-db | awk '{print $1}')
+      oc -n "{{ project_name }}" exec $pod -- bash -c 'mkdir -p /fabric/config/explorer/db/ && mkdir -p /fabric/config/explorer/app/ && cd /fabric/config/explorer/db/ && wget https://raw.githubusercontent.com/hyperledger/blockchain-explorer/master/app/persistence/fabric/postgreSQL/db/createdb.sh -O createdb.sh && wget https://raw.githubusercontent.com/hyperledger/blockchain-explorer/master/app/persistence/fabric/postgreSQL/db/explorerpg.sql -O explorerpg.sql && wget https://raw.githubusercontent.com/hyperledger/blockchain-explorer/master/app/persistence/fabric/postgreSQL/db/processenv.js -O processenv.js && wget https://raw.githubusercontent.com/hyperledger/blockchain-explorer/master/app/persistence/fabric/postgreSQL/db/updatepg.sql -O updatepg.sql && apk update && apk add jq ; apk add nodejs ; apk add sudo ; rm -rf /var/cache/apk/* && chmod +x ./createdb.sh && ./createdb.sh'
 
-  - name: Approve chaincode for Org2
-    shell: >
-      oc -n "{{ project_name }}" exec fabric-tools -- bash -c 'export CORE_PEER_TLS_ROOTCERT_FILE=/fabric/crypto-config/peerOrganizations/org2.example.com/peers/org2peer0/tls/ca.crt && export CC_RUNTIME_LANGUAGE="golang" && export CHAINCODE_VERSION="1.0" && export FABRIC_CFG_PATH="/etc/hyperledger/fabric" && export CORE_PEER_MSPCONFIGPATH="/fabric/crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp" && export CORE_PEER_LOCALMSPID="Org2MSP" && export CORE_PEER_ADDRESS="org2peer0:30110" && export CHANNEL_NAME=mychannel && export ORDERER_CA="/fabric/crypto-config/ordererOrganizations/example.com/orderers/orderer/msp/tlscacerts/tlsca.example.com-cert.pem" && peer lifecycle chaincode approveformyorg -o orderer:31010  --ordererTLSHostnameOverride orderer --tls --cafile $ORDERER_CA --channelID $CHANNEL_NAME --name fabcar --version ${VERSION} --init-required --package-id ${PACKAGE_ID}'
+    #wget https://raw.githubusercontent.com/hyperledger/blockchain-explorer/master/app/persistence/fabric/postgreSQL/db/createdb.sh -O createdb.sh &&
 
-  #--> neuer Commit für beide gleichzeitig   
-  
-  #oc -n "myproject" exec fabric-tools -- bash -c 'export CORE_PEER_TLS_ROOTCERT_FILE=/fabric/crypto-config/peerOrganizations/org1.example.com/peers/org1peer0/tls/ca.crt && export CC_RUNTIME_LANGUAGE="golang" && export CHAINCODE_VERSION="1.0" && export FABRIC_CFG_PATH="/etc/hyperledger/fabric" && export CORE_PEER_MSPCONFIGPATH="/fabric/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp" && export CORE_PEER_LOCALMSPID="Org1MSP" && export CORE_PEER_ADDRESS="org1peer0:30110" && export CHANNEL_NAME=mychannel && export ORDERER_CA="/fabric/crypto-config/ordererOrganizations/example.com/orderers/orderer/msp/tlscacerts/tlsca.example.com-cert.pem" && peer lifecycle chaincode commit -o orderer:31010 --ordererTLSHostnameOverride orderer --tls --cafile $ORDERER_CA --channelID $CHANNEL_NAME --name fabcar --peerAddresses $CORE_PEER_ADDRESS --tlsRootCertFiles $CORE_PEER_TLS_ROOTCERT_FILE --peerAddresses org2peer0:30110 --tlsRootCertFiles /fabric/crypto-config/peerOrganizations/org2.example.com/peers/org2peer0/tls/ca.crt --version ${VERSION} --init-required'
+  - name: Copy network file
+    shell: oc -n "{{ project_name }}" cp config/explorer/app/config.json fabric-tools:/fabric/config/explorer/app/
+    ignore_errors: true
 
-
-  - name: Commit chaincode definition for Org1
-    shell: >
-      oc -n "{{ project_name }}" exec fabric-tools -- bash -c 'export CORE_PEER_TLS_ROOTCERT_FILE=/fabric/crypto-config/peerOrganizations/org1.example.com/peers/org1peer0/tls/ca.crt && export CC_RUNTIME_LANGUAGE="golang" && export CHAINCODE_VERSION="1.0" && export FABRIC_CFG_PATH="/etc/hyperledger/fabric" && export CORE_PEER_MSPCONFIGPATH="/fabric/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp" && export CORE_PEER_LOCALMSPID="Org1MSP" && export CORE_PEER_ADDRESS="org1peer0:30110" && export CHANNEL_NAME=mychannel && export ORDERER_CA="/fabric/crypto-config/ordererOrganizations/example.com/orderers/orderer/msp/tlscacerts/tlsca.example.com-cert.pem" && peer lifecycle chaincode commit -o orderer:31010 --ordererTLSHostnameOverride orderer --tls --cafile $ORDERER_CA --channelID $CHANNEL_NAME --name fabcar --peerAddresses $CORE_PEER_ADDRESS --version ${VERSION} --init-required'
+  - name: Copy run.sh
+    shell: chmod +x config/explorer/app/run.sh && oc -n "{{ project_name }}" cp config/explorer/app/run.sh fabric-tools:/fabric/config/explorer/app/
+    ignore_errors: true
     
-  - name: Commit chaincode definition for Org2
-    shell: >
-      oc -n "{{ project_name }}" exec fabric-tools -- bash -c 'export CORE_PEER_TLS_ROOTCERT_FILE=/fabric/crypto-config/peerOrganizations/org2.example.com/peers/org2peer0/tls/ca.crt && export CC_RUNTIME_LANGUAGE="golang" && export CHAINCODE_VERSION="1.0" && export FABRIC_CFG_PATH="/etc/hyperledger/fabric" && export CORE_PEER_MSPCONFIGPATH="/fabric/crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp" && export CORE_PEER_LOCALMSPID="Org2MSP" && export CORE_PEER_ADDRESS="org2peer0:30110" && export CHANNEL_NAME=mychannel && export ORDERER_CA="/fabric/crypto-config/ordererOrganizations/example.com/orderers/orderer/msp/tlscacerts/tlsca.example.com-cert.pem" && peer lifecycle chaincode commit -o orderer:31010 --ordererTLSHostnameOverride orderer --tls --cafile $ORDERER_CA --channelID $CHANNEL_NAME --name fabcar --peerAddresses $CORE_PEER_ADDRESS --version ${VERSION} --init-required'
+  - name: Deploy explorer
+    shell: "oc apply -f kubernetes/blockchain-explorer-app_deploy.yaml -n {{ project_name }}"
 
-  - name: Chaincode invoke init Org1
-    shell: >
-      oc -n "{{ project_name }}" exec fabric-tools -- bash -c 'export CORE_PEER_TLS_ROOTCERT_FILE=/fabric/crypto-config/peerOrganizations/org1.example.com/peers/org1peer0/tls/ca.crt && export CC_RUNTIME_LANGUAGE="golang" && export CHAINCODE_VERSION="1.0" && export FABRIC_CFG_PATH="/etc/hyperledger/fabric" && export CORE_PEER_MSPCONFIGPATH="/fabric/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp" && export CORE_PEER_LOCALMSPID="Org1MSP" && export CORE_PEER_ADDRESS="org1peer0:30110" && export CHANNEL_NAME=mychannel && export ORDERER_CA="/fabric/crypto-config/ordererOrganizations/example.com/orderers/orderer/msp/tlscacerts/tlsca.example.com-cert.pem" && peer chaincode invoke -o orderer:31010 --ordererTLSHostnameOverride orderer --tls --cafile $ORDERER_CA -C $CHANNEL_NAME -n fabcar --peerAddresses $CORE_PEER_ADDRESS --isInit -c '{"function":"initLedger","Args":[]}''
+  - name: Create explorer svc
+    shell: "oc expose deployment blockchain-explorer-app --port=8080 -n {{ project_name }} || echo 'ja existe'"
 
-  - name: Chaincode invoke init Org2
-    shell: >
-      oc -n "{{ project_name }}" exec fabric-tools -- bash -c 'export CORE_PEER_TLS_ROOTCERT_FILE=/fabric/crypto-config/peerOrganizations/org2.example.com/peers/org2peer0/tls/ca.crt && export CC_RUNTIME_LANGUAGE="golang" && export CHAINCODE_VERSION="1.0" && export FABRIC_CFG_PATH="/etc/hyperledger/fabric" && export CORE_PEER_MSPCONFIGPATH="/fabric/crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp" && export CORE_PEER_LOCALMSPID="Org2MSP" && export CORE_PEER_ADDRESS="org2peer0:30110" && export CHANNEL_NAME=mychannel && export ORDERER_CA="/fabric/crypto-config/ordererOrganizations/example.com/orderers/orderer/msp/tlscacerts/tlsca.example.com-cert.pem" && peer chaincode invoke -o orderer:31010 --ordererTLSHostnameOverride orderer --tls --cafile $ORDERER_CA -C $CHANNEL_NAME -n fabcar --peerAddresses $CORE_PEER_ADDRESS --isInit -c '{"function":"initLedger","Args":[]}''
-    
-
-
-
-  #sleep 10 sec
-  - pause: seconds=10
-
-  - name: Chaincode invoke Org1
-    shell: >
-      oc -n "{{ project_name }}" exec fabric-tools -- bash -c 'export CORE_PEER_TLS_ROOTCERT_FILE=/fabric/crypto-config/peerOrganizations/org1.example.com/peers/org1peer0/tls/ca.crt && export CC_RUNTIME_LANGUAGE="golang" && export CHAINCODE_VERSION="1.0" && export FABRIC_CFG_PATH="/etc/hyperledger/fabric" && export CORE_PEER_MSPCONFIGPATH="/fabric/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp" && export CORE_PEER_LOCALMSPID="Org1MSP" && export CORE_PEER_ADDRESS="org1peer0:30110" && export CHANNEL_NAME=mychannel && export ORDERER_CA="/fabric/crypto-config/ordererOrganizations/example.com/orderers/orderer/msp/tlscacerts/tlsca.example.com-cert.pem" && peer chaincode invoke -o orderer:31010 --ordererTLSHostnameOverride orderer --tls --cafile $ORDERER_CA -C $CHANNEL_NAME -n fabcar --peerAddresses $CORE_PEER_ADDRESS -c '{"function":"initLedger","Args":[]}''
-  
-  - name: Chaincode invoke Org2
-    shell: >
-      oc -n "{{ project_name }}" exec fabric-tools -- bash -c 'export CORE_PEER_TLS_ROOTCERT_FILE=/fabric/crypto-config/peerOrganizations/org2.example.com/peers/org2peer0/tls/ca.crt && export CC_RUNTIME_LANGUAGE="golang" && export CHAINCODE_VERSION="1.0" && export FABRIC_CFG_PATH="/etc/hyperledger/fabric" && export CORE_PEER_MSPCONFIGPATH="/fabric/crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp" && export CORE_PEER_LOCALMSPID="Org2MSP" && export CORE_PEER_ADDRESS="org2peer0:30110" && export CHANNEL_NAME=mychannel && export ORDERER_CA="/fabric/crypto-config/ordererOrganizations/example.com/orderers/orderer/msp/tlscacerts/tlsca.example.com-cert.pem" && peer chaincode invoke -o orderer:31010 --ordererTLSHostnameOverride orderer --tls --cafile $ORDERER_CA -C $CHANNEL_NAME -n fabcar --peerAddresses $CORE_PEER_ADDRESS -c '{"function":"initLedger","Args":[]}''
-
-  - name: Chaincode query
-    shell: >
-      oc -n "{{ project_name }}" exec fabric-tools -- bash -c 'export CORE_PEER_TLS_ROOTCERT_FILE=/fabric/crypto-config/peerOrganizations/org1.example.com/peers/org1peer0/tls/ca.crt && export CC_RUNTIME_LANGUAGE="golang" && export CHAINCODE_VERSION="1.0" && export FABRIC_CFG_PATH="/etc/hyperledger/fabric" && export CORE_PEER_MSPCONFIGPATH="/fabric/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp" && export CORE_PEER_LOCALMSPID="Org1MSP" && export CORE_PEER_ADDRESS="org1peer0:30110" && export CHANNEL_NAME=mychannel && export ORDERER_CA="/fabric/crypto-config/ordererOrganizations/example.com/orderers/orderer/msp/tlscacerts/tlsca.example.com-cert.pem" && peer chaincode query -C $CHANNEL_NAME -n fabcar -c '{"Args":["queryAllCars"]}''
+  - name: Create explorer route
+    shell: "oc expose svc/blockchain-explorer-app -n {{ project_name }} || echo 'ja existe'"

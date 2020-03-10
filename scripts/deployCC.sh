@@ -24,11 +24,11 @@ my_dir="$(dirname "$0")"
 #   #Richtigen Ort des Chaincodes abchecken
 # 	CC_SRC_PATH="/opt/gopath/src/fabcar/go/"
 
-# 	echo Vendoring Go dependencies ...
-# 	pushd ${CC_SRC_PATH}
-# 	GO111MODULE=on go mod vendor
-# 	popd
-# 	echo Finished vendoring Go dependencies
+	echo Vendoring Go dependencies ...
+	pushd ${CC_SRC_PATH}
+	GO111MODULE=on go mod vendor
+	popd
+	echo Finished vendoring Go dependencies
 
 # else
 # 	echo The chaincode language ${CC_RUNTIME_LANGUAGE} is not supported by this script
@@ -94,7 +94,7 @@ approveForMyOrg() {
     set +x
   else
     set -x
-    peer lifecycle chaincode approveformyorg -o orderer:31010  --ordererTLSHostnameOverride orderer --tls $CORE_PEER_TLS_ENABLED --cafile $ORDERER_CA  --channelID $CHANNEL_NAME --name fabcar --version ${VERSION} --init-required --package-id ${PACKAGE_ID} --sequence ${SEQUENCE} >&log.txt
+    peer lifecycle chaincode approveformyorg -o orderer:31010 --tls $CORE_PEER_TLS_ENABLED --cafile $ORDERER_CA  --channelID $CHANNEL_NAME --name fabcar --version ${VERSION} --init-required --package-id ${PACKAGE_ID} --sequence ${SEQUENCE} >&log.txt
     set +x
   fi
   cat log.txt
@@ -155,7 +155,7 @@ commitChaincodeDefinition() {
     set +x
   else
     set -x
-    peer lifecycle chaincode commit -o orderer:31010 --ordererTLSHostnameOverride orderer --tls $CORE_PEER_TLS_ENABLED --cafile $ORDERER_CA  --channelID $CHANNEL_NAME --name fabcar $PEER_CONN_PARMS --version ${VERSION} --sequence ${SEQUENCE} --init-required >&log.txt
+    peer lifecycle chaincode commit -o orderer:31010 --tls $CORE_PEER_TLS_ENABLED --cafile $ORDERER_CA  --channelID $CHANNEL_NAME --name fabcar $PEER_CONN_PARMS --version ${VERSION} --sequence ${SEQUENCE} --init-required >&log.txt
     res=$?
     set +x
   fi
@@ -213,7 +213,7 @@ chaincodeInvokeInit() {
     set +x
   else
     set -x
-    peer chaincode invoke -o orderer:31010 --ordererTLSHostnameOverride orderer --tls $CORE_PEER_TLS_ENABLED --cafile $ORDERER_CA -C $CHANNEL_NAME -n fabcar $PEER_CONN_PARMS --isInit -c '{"function":"initLedger","Args":[]}' >&log.txt
+    peer chaincode invoke -o orderer:31010 --tls $CORE_PEER_TLS_ENABLED --cafile $ORDERER_CA -C $CHANNEL_NAME -n fabcar $PEER_CONN_PARMS --isInit -c '{"function":"initLedger","Args":[]}' >&log.txt
     res=$?
     set +x
   fi
@@ -238,7 +238,7 @@ chaincodeInvoke() {
     set +x
   else
     set -x
-    peer chaincode invoke -o orderer:31010 --ordererTLSHostnameOverride orderer --tls $CORE_PEER_TLS_ENABLED --cafile $ORDERER_CA -C $CHANNEL_NAME -n fabcar $PEER_CONN_PARMS -c '{"function":"initLedger","Args":[]}' >&log.txt
+    peer chaincode invoke -o orderer:31010 --tls $CORE_PEER_TLS_ENABLED --cafile $ORDERER_CA -C $CHANNEL_NAME -n fabcar $PEER_CONN_PARMS -c '{"function":"initLedger","Args":[]}' >&log.txt
     res=$?
     set +x
 	fi

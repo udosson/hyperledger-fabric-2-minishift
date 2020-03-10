@@ -14,13 +14,13 @@ spec:
         persistentVolumeClaim:
           claimName: fabric-pvc
           # raus mit external launcher
-      - name: dockersocket
-        hostPath:
-          path: /var/run/docker.sock
+      # - name: dockersocket
+      #   hostPath:
+      #     path: /var/run/docker.sock
       containers:
       - name: peer
         image: udosson/udosson:hyperledger-fabric-peer-golang-jq
-        command: ["sh", "-c", "peer node start", sleep 60, "cp -r /fabric/config/core.yaml /etc/hyperledger/fabric/"]
+        command: ["sh", "-c", "peer node start"]
         networks:
         - byfn
         env:
@@ -32,9 +32,11 @@ spec:
           value: org1peer1:30110
         - name: CORE_PEER_LISTENADDRESS
           value: 0.0.0.0:30110
-        - name: CORE_PEER_CHAINCODEADDRESS
-          value: org1peer1:30111
-        - name: CORE_PEER_CHAINCODELISTENADDRESS
+        # - name: CORE_PEER_CHAINCODEADDRESS
+        #   value: org1peer1:30111
+        # - name: CORE_PEER_CHAINCODELISTENADDRESS
+        #   value: 0.0.0.0:30111
+        - name: CORE_PEER_EVENTS_ADDRESS
           value: 0.0.0.0:30111
         - name: CORE_PEER_GOSSIP_BOOTSTRAP
           value: org1peer0:30110
@@ -51,7 +53,9 @@ spec:
         - name: CORE_PEER_PROFILE_ENABLED
           value: "true"
         - name: CORE_VM_ENDPOINT
-          value: unix:///host/var/run/docker.sock
+          value: http://localhost:2375
+        # - name: CORE_VM_ENDPOINT
+        #   value: unix:///host/var/run/docker.sock
         - name: CORE_PEER_MSPCONFIGPATH
           value: /fabric/crypto-config/peerOrganizations/org1.example.com/peers/org1peer1/msp/
         - name: FABRIC_LOGGING_SPEC
@@ -64,30 +68,28 @@ spec:
           value: /fabric/crypto-config/peerOrganizations/org1.example.com/peers/org1peer1/tls/server.key
         - name: CORE_PEER_TLS_ROOTCERT_FILE
           value: /fabric/crypto-config/peerOrganizations/org1.example.com/peers/org1peer1/tls/ca.crt
-        - name: CORE_LEDGER_STATE_STATEDATABASE
-          value: "CouchDB"
-        - name: CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS
-          value: 0.0.0.0:5984
+        # - name: CORE_LEDGER_STATE_STATEDATABASE
+        #   value: "CouchDB"
+        # - name: CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS
+        #   value: 0.0.0.0:5984
         - name: FABRIC_CFG_PATH
           value: /fabric/config/
         - name: CORE_CHAINCODE_EXECUTETIMEOUT
           value: 300s
         - name: GODEBUG
           value: "netdns=go"
-        - name: dns_search 
-          value: " ."
         volumeMounts:
         - mountPath: /fabric
           name: fabricfiles
           #TODO dockersocket raus mit External Launcher
-        - mountPath: /host/var/run/docker.sock
-          name: dockersocket
-      - name: couchdb
-        image: hyperledger/fabric-couchdb:latest
-        env:
-        - name: TZ
-          value: "Europe/Amsterdam"
-        - name: COUCHDB_USER
-          value: ""
-        - name: COUCHDB_PASSWORD
-          value: ""
+        # - mountPath: /host/var/run/docker.sock
+        #   name: dockersocket
+      # - name: couchdb
+      #   image: hyperledger/fabric-couchdb:latest
+      #   env:
+      #   - name: TZ
+      #     value: "Europe/Amsterdam"
+      #   - name: COUCHDB_USER
+      #     value: ""
+      #   - name: COUCHDB_PASSWORD
+      #     value: ""

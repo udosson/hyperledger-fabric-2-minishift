@@ -16,10 +16,10 @@ spec:
 
       containers:
       - name: postgres
-        image: postgres:10.4-alpine
+        image: hyperledger/explorer-db:latest
         env:
         - name: TZ
-          value: "America/Sao_Paulo"
+          value: "Europe/Amsterdam"
         - name: DATABASE_DATABASE
           value: fabricexplorer
         - name: DATABASE_USERNAME
