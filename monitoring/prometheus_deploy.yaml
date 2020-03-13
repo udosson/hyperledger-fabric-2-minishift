@@ -1,0 +1,31 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: prometheus
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: prometheus
+    spec:
+      volumes:
+      - name: fabricfiles20
+        persistentVolumeClaim:
+          claimName: fabric-pvc20
+      - name: fabricfiles
+        persistentVolumeClaim:
+          claimName: fabric-pvc
+      containers:
+      - name: prometheus
+        image: prometheus/prometheus:latest
+        env:
+        - name: TZ
+          value: "Europe/Amsterdam"
+        volumeMounts:
+        - mountPath: /etc/prometheus/prometheus.yml
+          name: fabricfiles20
+          subPath: prometheus.yml
+        - mountPath: /etc/hosts
+          name: fabricfiles
+          subPath: ./opt/nnn/

@@ -1,0 +1,34 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: grafana
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: grafana
+    spec:
+      volumes:
+      - name: fabricfiles20
+        persistentVolumeClaim:
+          claimName: fabric-pvc20
+      - name: fabricfiles
+        persistentVolumeClaim:
+          claimName: fabric-pvc
+      containers:
+      - name: grafana
+        image: grafana/grafana:latest
+        env:
+        - name: TZ
+          value: "Europe/Amsterdam"
+        volumeMounts:
+        - mountPath: /var/lib/grafana/dashboards/mydashboard.json
+          name: fabricfiles20
+          subPath: mydashboard.json
+        - mountPath: /etc/grafana/provisioning
+          name: fabricfiles20
+          subPath: provisioning
+        - mountPath: /etc/hosts
+          name: fabricfiles
+          subPath: ./opt/nnn/

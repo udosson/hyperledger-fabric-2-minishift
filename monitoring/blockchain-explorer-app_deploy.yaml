@@ -1,0 +1,51 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: blockchain-explorer-app
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: explorer
+    spec:
+      volumes:
+      - name: fabricfiles
+        persistentVolumeClaim:
+          claimName: fabric-pvc
+      - name: fabricfiles20
+        persistentVolumeClaim:
+          claimName: fabric-pvc20
+
+      containers:
+      - name: explorer
+        image: hyperledger/explorer:latest
+        command: ["sh" , "-c" , "sleep 16&& node /opt/explorer/main.js && tail -f /dev/null"]
+        env:
+        - name: TZ
+          value: "Europe/Amsterdam"
+        - name: DATABASE_HOST
+          value: blockchain-explorer-db
+        - name: DATABASE_USERNAME
+          value: hppoc
+        - name: DATABASE_PASSWORD
+          value: password
+        - name: EXTRA_HOST
+          value: grafana
+        - name: EXTRA_HOST
+          value: prometheus
+        - name: DISCOVERY_AS_LOCALHOST
+          value: "false"
+        volumeMounts:
+        - mountPath: /opt/explorer/app/platform/fabric/config.json
+          name: fabricfiles
+          subPath: ./opt/explorer/app/platform/fabric/config.json
+        - mountPath: /opt/explorer/app/platform/fabric/connection-profile
+          name: fabricfiles
+          subPath: ./opt/explorer/app/platform/fabric/connection-profile
+        - mountPath: /opt/crypto
+          name: fabricfiles
+          subPath: ./opt/crypto
+        - mountPath: /etc/hosts
+          name: fabricfiles
+          subPath: ./etc/hosts

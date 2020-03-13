@@ -132,6 +132,8 @@
     retries: 60
     delay: 20
 
+  - pause: seconds=10
+
   - name: Create channel
     shell: >
       oc -n "{{ project_name }}" exec fabric-tools -- bash -c 'export FABRIC_CFG_PATH=/fabric && export CORE_PEER_MSPCONFIGPATH=/fabric/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/ && export CORE_PEER_ADDRESS=org1peer0:30110 && export CORE_PEER_LOCALMSPID="Org1MSP" && export CORE_PEER_TLS_ROOTCERT_FILE=/fabric/crypto-config/peerOrganizations/org1.example.com/peers/org1peer0/tls/ca.crt && export CHANNEL_NAME=mychannel && export FABRIC_CFG_PATH=/fabric/config/ && peer channel create -o orderer:31010 -c $CHANNEL_NAME -f /fabric/channel-artifacts/channel.tx --tls --cafile /fabric/crypto-config/ordererOrganizations/example.com/orderers/orderer/msp/tlscacerts/tlsca.example.com-cert.pem'
@@ -139,6 +141,8 @@
     register: channel_result
     failed_when: "'version 0, but got version 1' not in channel_result.stderr and channel_result.rc != 0"
 
+  - pause: seconds=10
+  
   - name: Join channel Org1
     shell: >
       oc -n "{{ project_name }}" exec fabric-tools -- bash -c 'export CORE_PEER_MSPCONFIGPATH=/fabric/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/ && export CORE_PEER_ADDRESS=org1peer0:30110 && export CORE_PEER_LOCALMSPID="Org1MSP" && export CORE_PEER_TLS_ROOTCERT_FILE=/fabric/crypto-config/peerOrganizations/org1.example.com/peers/org1peer0/tls/ca.crt && export CHANNEL_NAME=mychannel && export FABRIC_CFG_PATH=/fabric/config/ && peer channel join -b $CHANNEL_NAME.block'
@@ -155,9 +159,9 @@
     shell: >
        oc -n "{{ project_name }}"  exec fabric-tools -- bash -c 'export CORE_PEER_MSPCONFIGPATH=/fabric/crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp/ && export CORE_PEER_ADDRESS=org2peer0:30110 && export CORE_PEER_LOCALMSPID="Org2MSP" && export CORE_PEER_TLS_ROOTCERT_FILE=/fabric/crypto-config/peerOrganizations/org2.example.com/peers/org2peer0/tls/ca.crt && export CHANNEL_NAME=mychannel && export FABRIC_CFG_PATH=/fabric/config/ && peer channel update -o orderer:31010  -c $CHANNEL_NAME -f /fabric/channel-artifacts/Org2MSPanchors.tx --tls --cafile /fabric/crypto-config/ordererOrganizations/example.com/orderers/orderer/msp/tlscacerts/tlsca.example.com-cert.pem'
   
-  - name: Let chaincode process give it to its best
-    shell: >
-      oc -n "{{ project_name }}" exec fabric-tools -- bash -c '/fabric/scripts/deployCC.sh'
+  # - name: Let chaincode process give it to its best
+  #   shell: >
+  #     oc -n "{{ project_name }}" exec fabric-tools -- bash -c '/fabric/scripts/deployCC.sh'
 
   
   # - name: Deploy Hyperledger Explorer Database

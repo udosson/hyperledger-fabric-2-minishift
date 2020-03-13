@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: blockchain-explorer-app
+  labels:
+    run: explorer-app
+spec:
+  type: ClusterIP 
+  selector:
+    name: explorer-app
+  ports:
+  - protocol: TCP
+    port: 8080
+    name: explorer-app

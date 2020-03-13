@@ -1,21 +1,12 @@
-Error: query failed with status: 500 - Failed to authorize invocation due to failed ACL check: Failed evaluating policy on signed data during check policy on channel [mychannel] with policy [/Channel/Application/Writers]: [implicit policy evaluation failed - 0 sub-policies were satisfied, but this policy requires 1 of the 'Writers' sub-policies to be satisfied]", "!!!!!!!!!!!!!!! After 5 attempts, Check commit readiness result on peer0.org1 is INVALID !!!!!!!!!!!!!!!!", "================== ERROR !!! FAILED to execute End-2-End Scenario =================="]}
+oc -n "myproject" exec fabric-tools -- bash -c 'export CORE_PEER_MSPCONFIGPATH=/fabric/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/ && export CORE_PEER_ADDRESS=org1peer0:30110 && export CORE_PEER_LOCALMSPID="Org1MSP" && export CORE_PEER_TLS_ROOTCERT_FILE=/fabric/crypto-config/peerOrganizations/org1.example.com/peers/org1peer0/tls/ca.crt && export CHANNEL_NAME=mychannel && export FABRIC_CFG_PATH=/fabric/config/ && peer channel join -b $CHANNEL_NAME.block'
 
-oc -n "myproject" exec fabric-tools -- bash -c 'cp -r /fabric/chaincode $GOPATH/src/ && export CORE_PEER_TLS_ROOTCERT_FILE=/fabric/crypto-config/peerOrganizations/org2.example.com/peers/org2peer0/tls/ca.crt && export CC_RUNTIME_LANGUAGE="golang" && export CHAINCODE_VERSION="1.0" && export FABRIC_CFG_PATH="/etc/hyperledger/fabric" && export CORE_PEER_MSPCONFIGPATH="/fabric/crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp" && export CORE_PEER_LOCALMSPID="Org2MSP" && export CORE_PEER_ADDRESS="org2peer0:30110" && export CHANNEL_NAME=mychannel && export ORDERER_CA="/fabric/crypto-config/ordererOrganizations/example.com/orderers/orderer/msp/tlscacerts/tlsca.example.com-cert.pem" && peer lifecycle chaincode checkcommitreadiness --channelID $CHANNEL_NAME --name fabcar --tlsRootCertFiles $CORE_PEER_TLS_ROOTCERT_FILE --peerAddresses $CORE_PEER_ADDRESS --version ${CHAINCODE_VERSION} --output json --init-required' 
+  oc -n "myproject"  exec fabric-tools -- bash -c 'export CORE_PEER_MSPCONFIGPATH=/fabric/crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp/ && export CORE_PEER_ADDRESS=org2peer0:30110 && export CORE_PEER_LOCALMSPID="Org2MSP" && export CORE_PEER_TLS_ROOTCERT_FILE=/fabric/crypto-config/peerOrganizations/org2.example.com/peers/org2peer0/tls/ca.crt && export CHANNEL_NAME=mychannel && export FABRIC_CFG_PATH=/fabric/config/ && peer channel join -b $CHANNEL_NAME.block'
 
 
-oc -n "myproject" exec fabric-tools -- bash -c 'cp -r /fabric/chaincode $GOPATH/src/ && export CORE_PEER_TLS_ROOTCERT_FILE=/fabric/crypto-config/peerOrganizations/org2.example.com/peers/org2peer0/tls/ca.crt && export CC_RUNTIME_LANGUAGE="golang" && export CHAINCODE_VERSION="1.0" && export FABRIC_CFG_PATH="/etc/hyperledger/fabric" && export CORE_PEER_MSPCONFIGPATH="/fabric/crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp" && export CORE_PEER_LOCALMSPID="Org2MSP" && export CORE_PEER_ADDRESS="org2peer0:30110" && export CHANNEL_NAME=mychannel && export ORDERER_CA="/fabric/crypto-config/ordererOrganizations/example.com/orderers/orderer/msp/tlscacerts/tlsca.example.com-cert.pem" && peer lifecycle chaincode queryinstalled >&log.txt'
+oc -n "myproject"  exec fabric-tools -- bash -c 'export CORE_PEER_MSPCONFIGPATH=/fabric/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/ && export CORE_PEER_ADDRESS=org1peer0:30110 && export CORE_PEER_LOCALMSPID="Org1MSP" && export CORE_PEER_TLS_ROOTCERT_FILE=/fabric/crypto-config/peerOrganizations/org1.example.com/peers/org1peer0/tls/ca.crt && export CHANNEL_NAME=mychannel && export FABRIC_CFG_PATH=/fabric/config/ && peer channel update -o orderer:31010  -c $CHANNEL_NAME -f /fabric/channel-artifacts/Org1MSPanchors.tx --tls --cafile /fabric/crypto-config/ordererOrganizations/example.com/orderers/orderer/msp/tlscacerts/tlsca.example.com-cert.pem'
 
-oc -n "myproject" exec fabric-tools -- bash -c 'cp -r /fabric/chaincode $GOPATH/src/ && export CORE_PEER_TLS_ROOTCERT_FILE=/fabric/crypto-config/peerOrganizations/org2.example.com/peers/org2peer0/tls/ca.crt && export CC_RUNTIME_LANGUAGE="golang" && export CHAINCODE_VERSION="1.0" && export FABRIC_CFG_PATH="/etc/hyperledger/fabric" && export CORE_PEER_MSPCONFIGPATH="/fabric/crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp" && export CORE_PEER_LOCALMSPID="Org2MSP" && export CORE_PEER_ADDRESS="org2peer0:30110" && peer lifecycle chaincode install fabcar.tar.gz'
+oc -n "myproject"  exec fabric-tools -- bash -c 'export CORE_PEER_MSPCONFIGPATH=/fabric/crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp/ && export CORE_PEER_ADDRESS=org2peer0:30110 && export CORE_PEER_LOCALMSPID="Org2MSP" && export CORE_PEER_TLS_ROOTCERT_FILE=/fabric/crypto-config/peerOrganizations/org2.example.com/peers/org2peer0/tls/ca.crt && export CHANNEL_NAME=mychannel && export FABRIC_CFG_PATH=/fabric/config/ && peer channel update -o orderer:31010  -c $CHANNEL_NAME -f /fabric/channel-artifacts/Org2MSPanchors.tx --tls --cafile /fabric/crypto-config/ordererOrganizations/example.com/orderers/orderer/msp/tlscacerts/tlsca.example.com-cert.pem'
 
-/fabric/chaincode/fabcar/go/
-
-oc -n "myproject" exec fabric-tools -- bash -c 'CORE_PEER_TLS_ROOTCERT_FILE=/fabric/crypto-config/peerOrganizations/org1.example.com/peers/org1peer0/tls/ca.crt && export CC_RUNTIME_LANGUAGE="golang" && export CHAINCODE_VERSION="1.0" && export FABRIC_CFG_PATH="/etc/hyperledger/fabric" && export CORE_PEER_MSPCONFIGPATH="/fabric/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp" && export CORE_PEER_LOCALMSPID="Org1MSP" && export CORE_PEER_ADDRESS="org1peer0:30110" && peer lifecycle chaincode package fabcar.tar.gz --path /fabric/chaincode/fabcar/go/ --lang ${CC_RUNTIME_LANGUAGE} --label fabcar_${CHAINCODE_VERSION}' 
-
-oc -n "myproject" exec fabric-tools -- bash -c 'export CORE_PEER_TLS_ROOTCERT_FILE=/fabric/crypto-config/peerOrganizations/org1.example.com/peers/org1peer0/tls/ca.crt && export CC_RUNTIME_LANGUAGE="golang" && export CHAINCODE_VERSION="1.0" && export FABRIC_CFG_PATH="/etc/hyperledger/fabric" && export CORE_PEER_MSPCONFIGPATH="/fabric/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp" && export CORE_PEER_LOCALMSPID="Org1MSP" && export CORE_PEER_ADDRESS="org1peer0:30110" && peer lifecycle chaincode install fabcar.tar.gz'
-
-oc -n "myproject" exec fabric-tools -- bash -c 'cp -r /fabric/chaincode $GOPATH/src/ && export CORE_PEER_TLS_ROOTCERT_FILE=/fabric/crypto-config/peerOrganizations/org2.example.com/peers/org2peer0/tls/ca.crt && export CC_RUNTIME_LANGUAGE="golang" && export CHAINCODE_VERSION="1.0" && export FABRIC_CFG_PATH="/etc/hyperledger/fabric" && export CORE_PEER_MSPCONFIGPATH="/fabric/crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp" && export CORE_PEER_LOCALMSPID="Org2MSP" && export CORE_PEER_ADDRESS="org2peer0:30110" && peer lifecycle chaincode install fabcar.tar.gz'
-
-oc -n "myproject" exec fabric-tools -- bash -c 'export CORE_PEER_TLS_ROOTCERT_FILE=/fabric/crypto-config/peerOrganizations/org1.example.com/peers/org1peer0/tls/ca.crt && export CC_RUNTIME_LANGUAGE="golang" && export CHAINCODE_VERSION="1.0" && export FABRIC_CFG_PATH="/etc/hyperledger/fabric" && export CORE_PEER_MSPCONFIGPATH="/fabric/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp" && export CORE_PEER_LOCALMSPID="Org1MSP" && export CORE_PEER_ADDRESS="org1peer0:30110" && peer lifecycle chaincode queryinstalled >&log.txt && cat log.txt && export PACKAGE_ID=$(sed -n "/fabcar_${VERSION}/{s/^Package ID: //; s/, Label:.*$//; p;}" log.txt)'
 
 
 
@@ -50,6 +41,8 @@ oc -n "myproject" exec fabric-tools -- bash -c 'export CORE_PEER_TLS_ROOTCERT_FI
 
  oc -n "myproject" cp scripts fabric-tools:/fabric
 
+
+peer chaincode query -C $CHANNEL_NAME -n fabcar -c '{"Args":["queryAllCars"]}' >&log.txt
  
 
 
@@ -76,4 +69,10 @@ peer channel list -o orderer:31010  --tls --cafile /fabric/crypto-config/orderer
 
 export CORE_PEER_MSPCONFIGPATH=/fabric/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/ && export CORE_PEER_ADDRESS=org1peer0:30110 && export CORE_PEER_LOCALMSPID="Org1MSP" && export CORE_PEER_TLS_ROOTCERT_FILE=/fabric/crypto-config/peerOrganizations/org1.example.com/peers/org1peer0/tls/ca.crt && export CHANNEL_NAME=mychannel && export FABRIC_CFG_PATH=/fabric/config/ 
 
+
+peer chaincode query -C $CHANNEL_NAME -n --name fabcar --peerAddresses org1peer0:30110 --tlsRootCertFiles fabric/crypto-config/peerOrganizations/org1.example.com/peers/org1peer0/tls/ca.crt -c '{"Args":["queryAllCars"]}'
+
 peer channel list -o orderer:31010 --tls --cafile /fabric/crypto-config/ordererOrganizations/example.com/orderers/orderer/msp/tlscacerts/tlsca.example.com-cert.pem'
+
+
+peer chaincode query -C $CHANNEL_NAME -n fabcar -c '{"Args":["queryAllCars"]}'

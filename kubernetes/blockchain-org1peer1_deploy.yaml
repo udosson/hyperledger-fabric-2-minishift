@@ -68,10 +68,10 @@ spec:
           value: /fabric/crypto-config/peerOrganizations/org1.example.com/peers/org1peer1/tls/server.key
         - name: CORE_PEER_TLS_ROOTCERT_FILE
           value: /fabric/crypto-config/peerOrganizations/org1.example.com/peers/org1peer1/tls/ca.crt
-        # - name: CORE_LEDGER_STATE_STATEDATABASE
-        #   value: "CouchDB"
-        # - name: CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS
-        #   value: 0.0.0.0:5984
+        - name: CORE_LEDGER_STATE_STATEDATABASE
+          value: "CouchDB"
+        - name: CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS
+          value: 0.0.0.0:5984
         - name: FABRIC_CFG_PATH
           value: /fabric/config/
         - name: CORE_CHAINCODE_EXECUTETIMEOUT
@@ -84,12 +84,12 @@ spec:
           #TODO dockersocket raus mit External Launcher
         # - mountPath: /host/var/run/docker.sock
         #   name: dockersocket
-      # - name: couchdb
-      #   image: hyperledger/fabric-couchdb:latest
-      #   env:
-      #   - name: TZ
-      #     value: "Europe/Amsterdam"
-      #   - name: COUCHDB_USER
-      #     value: ""
-      #   - name: COUCHDB_PASSWORD
-      #     value: ""
+      - name: couchdb
+        image: hyperledger/fabric-couchdb:latest
+        env:
+        - name: TZ
+          value: "Europe/Amsterdam"
+        - name: COUCHDB_USER
+          value: ""
+        - name: COUCHDB_PASSWORD
+          value: ""
